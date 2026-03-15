@@ -28,11 +28,23 @@ import {
   Trash2,
   Edit2,
   X,
-  Info
+  Info,
+  Sun,
+  ShieldCheck,
+  Palette
 } from 'lucide-react';
 import { motion, AnimatePresence } from 'motion/react';
 import { Habit, UserStats, HabitCategory } from './types';
 import { INITIAL_HABITS, ACHIEVEMENTS, STORE_ITEMS } from './constants';
+
+const ICON_MAP: Record<string, any> = {
+  Sun,
+  Zap,
+  Shield,
+  Trophy,
+  ShieldCheck,
+  Palette
+};
 
 // --- Components ---
 
@@ -401,18 +413,23 @@ const StoreScreen = () => (
   <div className="p-6 space-y-6 pb-24">
     <h1 className="text-2xl font-bold">Loja de Itens</h1>
     <div className="grid grid-cols-2 gap-4">
-      {STORE_ITEMS.map(item => (
-        <div key={item.id} className="bg-white p-4 rounded-2xl border border-slate-100 shadow-sm space-y-3">
-          <div className="w-full aspect-square bg-slate-50 rounded-xl flex items-center justify-center text-3xl">{item.icon}</div>
-          <div>
-            <h3 className="font-bold text-sm">{item.title}</h3>
-            <p className="text-[10px] text-slate-400">{item.description}</p>
+      {STORE_ITEMS.map(item => {
+        const Icon = ICON_MAP[item.icon] || Zap;
+        return (
+          <div key={item.id} className="bg-white p-4 rounded-2xl border border-slate-100 shadow-sm space-y-3">
+            <div className="w-full aspect-square bg-slate-50 rounded-xl flex items-center justify-center text-primary">
+              <Icon size={32} />
+            </div>
+            <div>
+              <h3 className="font-bold text-sm">{item.title}</h3>
+              <p className="text-[10px] text-slate-400">{item.description}</p>
+            </div>
+            <button className="w-full py-2 bg-primary/10 text-primary rounded-lg text-xs font-bold flex items-center justify-center gap-1">
+              <Zap size={12} fill="currentColor" /> {item.price} WP
+            </button>
           </div>
-          <button className="w-full py-2 bg-primary/10 text-primary rounded-lg text-xs font-bold flex items-center justify-center gap-1">
-            <Zap size={12} fill="currentColor" /> {item.price} WP
-          </button>
-        </div>
-      ))}
+        );
+      })}
     </div>
   </div>
 );
@@ -549,13 +566,18 @@ const StatsScreen = () => (
     <div className="space-y-4">
       <h3 className="font-bold px-2">Conquistas</h3>
       <div className="grid grid-cols-2 gap-4">
-        {ACHIEVEMENTS.map(ach => (
-          <div key={ach.id} className={`p-4 rounded-2xl border flex flex-col items-center text-center gap-2 ${ach.unlocked ? 'bg-white border-slate-100 shadow-sm' : 'bg-slate-50 border-slate-100 opacity-50'}`}>
-            <div className="text-3xl">{ach.icon}</div>
-            <h4 className="text-xs font-bold">{ach.title}</h4>
-            <p className="text-[10px] text-slate-400">{ach.description}</p>
-          </div>
-        ))}
+        {ACHIEVEMENTS.map(ach => {
+          const Icon = ICON_MAP[ach.icon] || Trophy;
+          return (
+            <div key={ach.id} className={`p-4 rounded-2xl border flex flex-col items-center text-center gap-2 ${ach.unlocked ? 'bg-white border-slate-100 shadow-sm' : 'bg-slate-50 border-slate-100 opacity-50'}`}>
+              <div className={`w-12 h-12 rounded-xl flex items-center justify-center ${ach.unlocked ? 'bg-primary/10 text-primary' : 'bg-slate-200 text-slate-400'}`}>
+                <Icon size={24} />
+              </div>
+              <h4 className="text-xs font-bold">{ach.title}</h4>
+              <p className="text-[10px] text-slate-400">{ach.description}</p>
+            </div>
+          );
+        })}
       </div>
     </div>
   </div>
@@ -741,16 +763,55 @@ const NoFapScreen = ({ stats, onReset }: { stats: UserStats, onReset: () => void
           </div>
           
           <button 
-            onClick={() => {
-              if (confirm('Você tem certeza que deseja resetar seu streak? A honestidade é a base do guerreiro.')) {
-                onReset();
-              }
-            }}
+            onClick={() => setShowResetConfirm(true)}
             className="w-full py-4 text-red-500 font-bold text-sm uppercase tracking-widest hover:bg-red-50 rounded-xl transition-colors"
           >
             Eu falhei (Resetar Streak)
           </button>
         </div>
+
+        <AnimatePresence>
+          {showResetConfirm && (
+            <motion.div 
+              initial={{ opacity: 0 }}
+              animate={{ opacity: 1 }}
+              exit={{ opacity: 0 }}
+              className="fixed inset-0 bg-black/60 backdrop-blur-sm z-[100] flex items-center justify-center p-6"
+            >
+              <motion.div 
+                initial={{ scale: 0.9, opacity: 0 }}
+                animate={{ scale: 1, opacity: 1 }}
+                exit={{ scale: 0.9, opacity: 0 }}
+                className="bg-white rounded-3xl p-8 w-full max-w-sm text-center space-y-6"
+              >
+                <div className="w-16 h-16 bg-red-50 text-red-500 rounded-2xl flex items-center justify-center mx-auto">
+                  <Shield size={32} />
+                </div>
+                <div className="space-y-2">
+                  <h3 className="text-xl font-bold text-slate-900">Resetar Streak?</h3>
+                  <p className="text-sm text-slate-500">Você tem certeza que deseja resetar seu streak? A honestidade é a base do guerreiro.</p>
+                </div>
+                <div className="flex flex-col gap-3">
+                  <button 
+                    onClick={() => {
+                      onReset();
+                      setShowResetConfirm(false);
+                    }}
+                    className="w-full py-4 bg-red-500 text-white font-bold rounded-xl shadow-lg shadow-red-200"
+                  >
+                    Sim, eu falhei
+                  </button>
+                  <button 
+                    onClick={() => setShowResetConfirm(false)}
+                    className="w-full py-4 bg-slate-100 text-slate-600 font-bold rounded-xl"
+                  >
+                    Continuar lutando
+                  </button>
+                </div>
+              </motion.div>
+            </motion.div>
+          )}
+        </AnimatePresence>
       </div>
     </div>
   );
@@ -782,6 +843,7 @@ export default function App() {
   const [showLibrary, setShowLibrary] = useState(false);
   const [editingHabit, setEditingHabit] = useState<Habit | null>(null);
   const [isAddingHabit, setIsAddingHabit] = useState(false);
+  const [showResetConfirm, setShowResetConfirm] = useState(false);
 
   const handleStartHabit = (habit: Habit) => {
     setActiveHabit(habit);
